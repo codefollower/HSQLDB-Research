@@ -38,11 +38,17 @@ public class HsqldbJdbcTest {
         url = "jdbc:hsqldb:hsql://localhost/";
         Connection conn = DriverManager.getConnection(url, "SA", "");
         Statement stmt = conn.createStatement();
+        // SET DATABASE TRANSACTION CONTROL { LOCKS | MVLOCKS | MVCC }
+        stmt.executeUpdate("SET DATABASE TRANSACTION CONTROL MVLOCKS");
         stmt.executeUpdate("DROP TABLE IF EXISTS test");
-        stmt.executeUpdate("CREATE TABLE IF NOT EXISTS test (f1 int primary key, f2 BIGINT)");
+        stmt.executeUpdate("CREATE CACHED TABLE IF NOT EXISTS test (f1 int primary key, f2 BIGINT)");
+        stmt.executeUpdate("INSERT INTO test(f1, f2) VALUES(1, 1)");
+        stmt.executeUpdate("INSERT INTO test(f1, f2) VALUES(2, 2)");
+        stmt.executeUpdate("DELETE FROM test");
+
         stmt.executeUpdate("INSERT INTO test(f1, f2) VALUES(1, 1)");
         stmt.executeUpdate("UPDATE test SET f2 = 2 WHERE f1 = 1");
-        ResultSet rs = stmt.executeQuery("SELECT * FROM test");
+        ResultSet rs = stmt.executeQuery("SELECT * FROM test WHERE f1 = 1");
         Assert.assertTrue(rs.next());
         System.out.println("f1=" + rs.getInt(1) + " f2=" + rs.getLong(2));
         Assert.assertFalse(rs.next());
